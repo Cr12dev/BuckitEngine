@@ -3,12 +3,11 @@
 defines="-DENGINE"
 libs="-luser32 -lopengl32 -lgdi32"
 warnings="-Wno-writable-strings -Wno-format-security"
-includes="-Iincludes"
+includes="-Iinclude"
 
 timestamp=$(date +%s)
 
 out="build"
-
 mkdir -p "$out"
 
 echo "Creando biblioteca dinamica"
@@ -17,7 +16,7 @@ echo "Creando biblioteca dinamica"
     $includes \
     -shared \
     -o "$out/game_$timestamp.dll" \
-    $warnings $defines
+    $libs $warnings $defines
 
 cp "$out/game_$timestamp.dll" "$out/game.dll"
 

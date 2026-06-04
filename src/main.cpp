@@ -1,4 +1,5 @@
 #include "../includes/InitWindow.h"
+#include <windows.h>
 
 LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -16,6 +17,26 @@ LRESULT CALLBACK WindowProc(
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+static bool running = true;
+
+// Engine Systems // 
+
+/**
+ * Function for update all frames 
+ */
+void Update()
+{
+    
+}
+
+/**
+ * Function for render 
+ */
+void Render()
+{
+    
+}
+
 int main()
 {
     HINSTANCE instancia = GetModuleHandle(nullptr);
@@ -25,7 +46,10 @@ int main()
     wc.hInstance = instancia;
     wc.lpszClassName = "MiClase";
 
-    RegisterClassA(&wc);
+    if (!RegisterClassA(&wc))
+    {
+        return -1;
+    }
 
     HWND ventana;
 
@@ -43,15 +67,31 @@ int main()
     }
 
     ShowWindow(ventana, SW_SHOW);
+    UpdateWindow(ventana);
 
-    MSG msg;
+    MSG msg = {};
 
-    while (GetMessage(&msg, nullptr, 0, 0))
+    // GAME LOOP REAL
+    while (running)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+        // Procesar mensajes sin bloquear
+        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+            {
+                running = false;
+            }
 
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        // ===== UPDATE =====
+        Update();
+
+        // ===== RENDER =====
+        Render();
+    }
 
     return 0;
 }
