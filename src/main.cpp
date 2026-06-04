@@ -1,11 +1,24 @@
 #include "../includes/InitWindow.h"
+#include "../includes/CubeData.h"
 #include <windows.h>
+#include <d3d11.h>
+#include <DirectXMath.h>
 
-LRESULT CALLBACK WindowProc(
-    HWND hwnd,
-    UINT msg,
-    WPARAM wParam,
-    LPARAM lParam)
+using namespace DirectX;
+
+// =====================
+// GLOBAL DX11
+// =====================
+ID3D11Device* device = nullptr;
+ID3D11DeviceContext* context = nullptr;
+IDXGISwapChain* swapChain = nullptr;
+ID3D11RenderTargetView* rtv = nullptr;
+
+
+// =====================
+// WINDOW PROC
+// =====================
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -13,30 +26,76 @@ LRESULT CALLBACK WindowProc(
             PostQuitMessage(0);
             return 0;
     }
-
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 static bool running = true;
 
-// Engine Systems // 
+// =====================
+// DX INIT
+// =====================
+bool InitD3D(HWND hwnd)
+{
+    DXGI_SWAP_CHAIN_DESC scd = {};
+    scd.BufferCount = 1;
+    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scd.OutputWindow = hwnd;
+    scd.SampleDesc.Count = 1;
+    scd.Windowed = TRUE;
 
-/**
- * Function for update all frames 
- */
+    D3D11CreateDeviceAndSwapChain(
+        nullptr,
+        D3D_DRIVER_TYPE_HARDWARE,
+        nullptr,
+        0,
+        nullptr,
+        0,
+        D3D11_SDK_VERSION,
+        &scd,
+        &swapChain,
+        &device,
+        nullptr,
+        &context
+    );
+
+    ID3D11Texture2D* backBuffer;
+    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
+    device->CreateRenderTargetView(backBuffer, nullptr, &rtv);
+    backBuffer->Release();
+
+    context->OMSetRenderTargets(1, &rtv, nullptr);
+
+    return true;
+}
+
+// =====================
+// ENGINE UPDATE
+// =====================
 void Update()
 {
-    
+    angle += 0.01f;
 }
 
-/**
- * Function for render 
- */
+// =====================
+// ENGINE RENDER
+// =====================
 void Render()
 {
-    
+    float clearColor[4] = {0.1f, 0.1f, 0.2f, 1.0f};
+    context->ClearRenderTargetView(rtv, clearColor);
+
+    // Aquí iría:
+    // - shaders
+    // - buffers
+    // - draw cube
+
+    swapChain->Present(1, 0);
 }
 
+// =====================
+// MAIN
+// =====================
 int main()
 {
     HINSTANCE instancia = GetModuleHandle(nullptr);
@@ -46,22 +105,19 @@ int main()
     wc.hInstance = instancia;
     wc.lpszClassName = "MiClase";
 
-    if (!RegisterClassA(&wc))
-    {
-        return -1;
-    }
+    RegisterClassA(&wc);
 
     HWND ventana;
 
     if (!CrearVentana(
-            ventana,
-            "MiClase",
-            "Mi Ventana",
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            1280,
-            720,
-            instancia))
+        ventana,
+        "MiClase",
+        "Mi Ventana",
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        1280,
+        720,
+        instancia))
     {
         return -1;
     }
@@ -69,27 +125,22 @@ int main()
     ShowWindow(ventana, SW_SHOW);
     UpdateWindow(ventana);
 
+    InitD3D(ventana);
+
     MSG msg = {};
 
-    // GAME LOOP REAL
     while (running)
     {
-        // Procesar mensajes sin bloquear
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
             if (msg.message == WM_QUIT)
-            {
                 running = false;
-            }
 
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        // ===== UPDATE =====
         Update();
-
-        // ===== RENDER =====
         Render();
     }
 

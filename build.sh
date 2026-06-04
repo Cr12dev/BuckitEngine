@@ -1,7 +1,8 @@
 #!/bin/bash
 
 defines="-DENGINE"
-libs="-luser32 -lopengl32 -lgdi32"
+#todo: add all directx11 lib
+libs="-luser32 -lopengl32 -lgdi32 -ld3d11 -ldxgi -ld3dcompiler"
 warnings="-Wno-writable-strings -Wno-format-security"
 includes="-Iinclude"
 
